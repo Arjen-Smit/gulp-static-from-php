@@ -1,4 +1,5 @@
-# gulp-static-from-php
+# gulp-static-from-php [![npm version](https://badge.fury.io/js/gulp-static-from-php.svg)](https://badge.fury.io/js/gulp-static-from-php)
+
 A static site generator that uses php to render pages
 
 ## install
