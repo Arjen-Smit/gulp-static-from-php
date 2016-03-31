@@ -9,8 +9,15 @@
   "author": "Arjen Smit",
   "license": "MIT",
   "dependencies": {
+    "cheerio": "^0.20.0",
+    "crypto": "0.0.3",
     "gulp-util": "^3.0.7",
     "shelljs": "^0.6.0",
     "through2": "^2.0.1"
+  },
+  "devDependencies": {
+    "istanbul": "^0.4.2",
+    "mocha": "^2.4.5",
+    "should": "^8.3.0"
   }
 }

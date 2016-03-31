@@ -3,35 +3,66 @@
 var gutil = require('gulp-util');
 var through = require('through2');
 var shell = require('shelljs');
+var cheerio = require("cheerio");
+var crypto = require('crypto');
 
 var PLUGIN_NAME = 'gulp-static-from-php';
+var DOCUMENT_LIST = {'/': null};
+
+var doRequest = function doRequest(processor, url) {
+    var html = shell.exec("php " + processor, {silent:true});
+    return html.stdout;
+}
+
+var scrubLinks = function scrubLinks(html) {
+    var $ = cheerio.load(html);
+    $("a").each(function() {
+        var link = $(this).attr("href");
+        if(link.charAt(0) == "/" && typeof DOCUMENT_LIST[link] == "undefined") {
+            DOCUMENT_LIST[link] = null;
+        }
+    });
+}
+
+var getLink = function getLink() {
+    var link = false;
+    Object.keys(DOCUMENT_LIST).forEach(function(key,index) {
+        if (DOCUMENT_LIST[key] == null) {
+            link = key;
+            return true;
+        }
+    }.bind(link));
+    return link;
+}
+
+var generateHtaccess = function generateHtaccess() {
+
+}
 
 var gulpStaticFromPhp = function gulpStaticFromPhp(options, sync) {
-
-    options = options || {
-        phpfile: 'index.php'
-    };
-    var phpfile = options.phpfile;
-
     return through.obj(function(file, enc, cb) {
-        var pages = JSON.parse(file.contents)
+        var processor = file.path;
 
-        Object.keys(pages).forEach(function(page) {
-            var request = ""
-                + " --page=" + page
-                + " --file=" + pages[page]
-            var html = shell.exec("php " + phpfile + " " + request, {silent:true});
+        var link;
+        while((link = getLink()) !== false ) {
+            var html = doRequest(processor, link);
+            var filename = "pages/" + crypto.createHash('md5').update(html).digest('hex') + ".html";
 
             this.push(new gutil.File({
                 cwd: "",
                 base: "",
-                path: pages[page],
-                contents: new Buffer(html.stdout)
+                path: filename,
+                contents: new Buffer(html)
             }));
 
-        }.bind(this));
+            DOCUMENT_LIST[link] = filename;
+            scrubLinks(html);
+        }
 
-        cb(null, file);
+        var htaccess = generateHtaccess();
+
+
+        cb(null);
     });
 }
 
